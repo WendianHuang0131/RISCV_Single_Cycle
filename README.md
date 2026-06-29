@@ -15,3 +15,30 @@ regfile.v
 decoder.v
 alu.v
 control_unit.v
+
+### MILESTORE
+
+Finshed CPU and testbench
+
+support R-Type add & sub instruction
+
+Test case:
+
+```
+//Preload register value:
+//x1 : 32'd10
+//x2 : 32'd25
+
+//Test program
+add x3, x1, x2
+sub x4, x2, x1
+
+```
+
+- Got correct result
+```
+x1 = 10
+x2 = 25
+x3 = 35
+x4 = 15
+```
