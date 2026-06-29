@@ -1,0 +1,6 @@
+此專案目標為學習 RISC-V 32 的硬體實作，預期順序：
+1. R-Type
+2. I-Type
+3. Load/Store
+4. Branch
+5. Jump
