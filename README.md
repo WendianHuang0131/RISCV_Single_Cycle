@@ -16,7 +16,7 @@ decoder.v
 alu.v
 control_unit.v
 
-### MILESTORE
+### MILESTORE 1
 
 Finshed CPU and testbench
 
@@ -42,3 +42,23 @@ x2 = 25
 x3 = 35
 x4 = 15
 ```
+
+## MILESTORE 2
+
+Finished R-Type instrunction, inclusing:
+
+```
+add
+sub
+and
+or
+xor
+slt
+sltu
+sll
+srl
+sra
+```
+
+run test patterns:
+make run TEST=R_type_basic
