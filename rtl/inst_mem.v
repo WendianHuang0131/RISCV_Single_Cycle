@@ -7,6 +7,13 @@ module inst_mem(
     //TODO: add inst mem size in define.v
     reg [`INST_WIDTH-1:0] mem [0:255];
 
+    //load test program
+    initial begin
+        // add x3, x1, x2
+        // sub x4, x2, x1
+        $readmemh("./program/add_sub.hex", mem);
+    end
+
     assign inst = mem[addr[9:2]]; // byte address to word address
 
 
