@@ -16,6 +16,13 @@ always @(*) begin
             case ({funct7, funct3})
                 {7'b0000000, 3'b000}: alu_ctrl = `ALU_ADD;
                 {7'b0100000, 3'b000}: alu_ctrl = `ALU_SUB;
+                {7'b0000000, 3'b111}: alu_ctrl = `ALU_AND;
+                {7'b0000000, 3'b110}: alu_ctrl = `ALU_OR;
+                {7'b0000000, 3'b100}: alu_ctrl = `ALU_XOR;
+                {7'b0000000, 3'b010}: alu_ctrl = `ALU_SLT;
+                {7'b0000000, 3'b001}: alu_ctrl = `ALU_SLL;
+                {7'b0000000, 3'b101}: alu_ctrl = `ALU_SRL;
+                {7'b0100000, 3'b101}: alu_ctrl = `ALU_SRA;
                 default             : alu_ctrl = `ALU_ADD;
                 
             endcase
