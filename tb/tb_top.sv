@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_cpu;
+module tb_top;
 
 reg clk;
 reg rst;
@@ -28,6 +28,12 @@ initial begin
     // test program
     // add x3, x1, x2
     // sub x4, x2, x1
+    $display("=======Preload regs======");
+    $display("x1 : 32'd10");
+    $display("x2 : 32'd25");
+    $display("=======TEST PROGRAM======");
+    $display("add x3, x1, x2");
+    $display("sub x4, x2, x1");
     $display("x1 = %0d", dut.u_regfile.regs[1]);
     $display("x2 = %0d", dut.u_regfile.regs[2]);
     $display("x3 = %0d", dut.u_regfile.regs[3]);

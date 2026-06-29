@@ -37,6 +37,7 @@ SRCS = \
 
 VERILATOR_FLAGS = \
 	-Wall \
+	-Wno-UNUSEDSIGNAL \
 	--timing \
 	--trace \
 	--binary \
