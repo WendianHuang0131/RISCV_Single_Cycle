@@ -15,6 +15,11 @@ always @(*) begin
         `ALU_AND: alu_result = operand_a & operand_b;
         `ALU_OR : alu_result = operand_a | operand_b;
         `ALU_XOR: alu_result = operand_a ^ operand_b;
+        `ALU_SLT: alu_result = ($signed(operand_a) < $signed(operand_b)) ? 32'd1 : 32'd0;
+        `ALU_SLTU: alu_result = (operand_a < operand_b) ? 32'd1 : 32'd0;
+        `ALU_SLL: alu_result = operand_a << operand_b[4:0];
+        `ALU_SRL: alu_result = operand_a >> operand_b[4:0];
+        `ALU_SRA: alu_result = $signed(operand_a) >>> operand_b[4:0];
         default : alu_result = 32'b0;
     endcase
 end
