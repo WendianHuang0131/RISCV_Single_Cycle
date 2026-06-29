@@ -3,5 +3,6 @@
 
 
 `define ADDR_WIDTH 32
+`define INST_WIDTH 32
 
 `endif
