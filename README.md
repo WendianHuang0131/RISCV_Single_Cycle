@@ -4,3 +4,14 @@
 3. Load/Store
 4. Branch
 5. Jump
+
+
+## 1. 支援 R-Type
+預期實作 module
+cpu.v
+pc.v
+inst_mem.v
+regfile.v
+decoder.v
+alu.v
+control_unit.v
