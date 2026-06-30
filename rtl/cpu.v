@@ -19,21 +19,24 @@ wire [`REG_ADDR_WIDTH-1:0] rd;
 
 wire [`DATA_WIDTH-1:0] rs1_data;
 wire [`DATA_WIDTH-1:0] rs2_data;
+wire [`DATA_WIDTH-1:0] imm;
+
+wire [`DATA_WIDTH-1:0] alu_operand_b;
 wire [`DATA_WIDTH-1:0] alu_result;
 
 wire [3:0] alu_ctrl;
+
 wire reg_write;
-
-wire [`DATA_WIDTH-1:0] imm;
-wire [`DATA_WIDTH-1:0] alu_operand_b;
 wire alu_src;
-
-assign alu_src = (opcode == `OPCODE_I);
-assign alu_operand_b = alu_src ? imm : rs2_data;
 
 assign pc_next = pc_current + 32'd4;
 
-assign reg_write = (opcode == `OPCODE_R);
+assign reg_write = (opcode == `OPCODE_R) ||
+                   (opcode == `OPCODE_I);
+
+assign alu_src = (opcode == `OPCODE_I);
+
+assign alu_operand_b = alu_src ? imm : rs2_data;
 
 pc u_pc (
     .clk     (clk),
@@ -57,6 +60,12 @@ decoder u_decoder (
     .funct7 (funct7)
 );
 
+imm_gen u_imm_gen (
+    .inst   (inst),
+    .opcode (opcode),
+    .imm    (imm)
+);
+
 regfile u_regfile (
     .clk       (clk),
     .rst       (rst),
@@ -78,7 +87,7 @@ alu_control u_alu_control (
 
 alu u_alu (
     .operand_a  (rs1_data),
-    .operand_b  (alu_operand_b ),
+    .operand_b  (alu_operand_b),
     .alu_ctrl   (alu_ctrl),
     .alu_result (alu_result)
 );

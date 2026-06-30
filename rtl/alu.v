@@ -1,57 +1,30 @@
 `include "define.v"
 
-module alu_control(
-    input wire [6:0] opcode,
-    input wire [6:0] funct7,
-    input wire [2:0] funct3,
+module alu(
+    input  wire [`DATA_WIDTH-1:0] operand_a,
+    input  wire [`DATA_WIDTH-1:0] operand_b,
+    input  wire [3:0]             alu_ctrl,
 
-    output reg [3:0] alu_ctrl
+    output reg  [`DATA_WIDTH-1:0] alu_result
 );
 
 always @(*) begin
-    alu_ctrl = `ALU_ADD;
+    case (alu_ctrl)
+        `ALU_ADD : alu_result = operand_a + operand_b;
+        `ALU_SUB : alu_result = operand_a - operand_b;
 
-    case (opcode)
-        `OPCODE_R: begin
-            case ({funct7, funct3})
-                {7'b0000000, 3'b000}: alu_ctrl = `ALU_ADD;
-                {7'b0100000, 3'b000}: alu_ctrl = `ALU_SUB;
-                {7'b0000000, 3'b111}: alu_ctrl = `ALU_AND;
-                {7'b0000000, 3'b110}: alu_ctrl = `ALU_OR;
-                {7'b0000000, 3'b100}: alu_ctrl = `ALU_XOR;
-                {7'b0000000, 3'b010}: alu_ctrl = `ALU_SLT;
-                {7'b0000000, 3'b011}: alu_ctrl = `ALU_SLTU;
-                {7'b0000000, 3'b001}: alu_ctrl = `ALU_SLL;
-                {7'b0000000, 3'b101}: alu_ctrl = `ALU_SRL;
-                {7'b0100000, 3'b101}: alu_ctrl = `ALU_SRA;
-                default              : alu_ctrl = `ALU_ADD;
-            endcase
-        end
+        `ALU_AND : alu_result = operand_a & operand_b;
+        `ALU_OR  : alu_result = operand_a | operand_b;
+        `ALU_XOR : alu_result = operand_a ^ operand_b;
 
-        `OPCODE_I: begin
-            case (funct3)
-                3'b000: alu_ctrl = `ALU_ADD;   // addi
-                3'b111: alu_ctrl = `ALU_AND;   // andi
-                3'b110: alu_ctrl = `ALU_OR;    // ori
-                3'b100: alu_ctrl = `ALU_XOR;   // xori
-                3'b010: alu_ctrl = `ALU_SLT;   // slti
-                3'b011: alu_ctrl = `ALU_SLTU;  // sltiu
-                3'b001: alu_ctrl = `ALU_SLL;   // slli
+        `ALU_SLT : alu_result = ($signed(operand_a) < $signed(operand_b)) ? 32'd1 : 32'd0;
+        `ALU_SLTU: alu_result = (operand_a < operand_b) ? 32'd1 : 32'd0;
 
-                3'b101: begin
-                    if (funct7 == 7'b0100000)
-                        alu_ctrl = `ALU_SRA;   // srai
-                    else
-                        alu_ctrl = `ALU_SRL;   // srli
-                end
+        `ALU_SLL : alu_result = operand_a << operand_b[4:0];
+        `ALU_SRL : alu_result = operand_a >> operand_b[4:0];
+        `ALU_SRA : alu_result = $signed(operand_a) >>> operand_b[4:0];
 
-                default: alu_ctrl = `ALU_ADD;
-            endcase
-        end
-
-        default: begin
-            alu_ctrl = `ALU_ADD;
-        end
+        default  : alu_result = {`DATA_WIDTH{1'b0}};
     endcase
 end
 
