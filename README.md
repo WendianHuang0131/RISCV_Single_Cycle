@@ -124,3 +124,6 @@ result
 [ OK  ] x30 = 0x00000000
 [ OK  ] x31 = 0x00000000
 ```
+
+run test patterns:
+make run TEST=I_type_basic 
