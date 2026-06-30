@@ -24,7 +24,6 @@ wire [`DATA_WIDTH-1:0] alu_result;
 wire [3:0] alu_ctrl;
 wire reg_write;
 
-//TODO implement alu operandb mux for I-Type instruction
 wire [`DATA_WIDTH-1:0] imm;
 wire [`DATA_WIDTH-1:0] alu_operand_b;
 wire alu_src;
