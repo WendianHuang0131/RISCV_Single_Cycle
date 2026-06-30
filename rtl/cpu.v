@@ -24,6 +24,14 @@ wire [`DATA_WIDTH-1:0] alu_result;
 wire [3:0] alu_ctrl;
 wire reg_write;
 
+//TODO implement alu operandb mux for I-Type instruction
+wire [`DATA_WIDTH-1:0] imm;
+wire [`DATA_WIDTH-1:0] alu_operand_b;
+wire alu_src;
+
+assign alu_src = (opcode == `OPCODE_I);
+assign alu_operand_b = alu_src ? imm : rs2_data;
+
 assign pc_next = pc_current + 32'd4;
 
 assign reg_write = (opcode == `OPCODE_R);
@@ -71,7 +79,7 @@ alu_control u_alu_control (
 
 alu u_alu (
     .operand_a  (rs1_data),
-    .operand_b  (rs2_data),
+    .operand_b  (alu_operand_b ),
     .alu_ctrl   (alu_ctrl),
     .alu_result (alu_result)
 );
