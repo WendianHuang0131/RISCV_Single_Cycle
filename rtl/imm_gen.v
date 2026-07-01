@@ -24,6 +24,10 @@ always @(*) begin
             imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
         end
 
+        `OPCODE_BRANCH: begin
+            imm = {{19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+        end
+
         default: begin
             imm = {`DATA_WIDTH{1'b0}};
         end
