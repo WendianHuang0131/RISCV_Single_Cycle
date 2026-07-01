@@ -10,8 +10,18 @@ module imm_gen(
 always @(*) begin
     case (opcode)
         `OPCODE_I: begin
-            //extend imm to 32bits imm
+            // addi, andi, ori, xori, slti, sltiu, slli, srli, srai
             imm = {{20{inst[31]}}, inst[31:20]};
+        end
+
+        `OPCODE_LOAD: begin
+            // lw: imm[11:0] = inst[31:20]
+            imm = {{20{inst[31]}}, inst[31:20]};
+        end
+
+        `OPCODE_STORE: begin
+            // sw: imm[11:5] = inst[31:25], imm[4:0] = inst[11:7]
+            imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
         end
 
         default: begin
