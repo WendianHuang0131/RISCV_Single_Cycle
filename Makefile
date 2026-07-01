@@ -59,6 +59,8 @@ RTL_SRCS = \
 	$(RTL_DIR)/alu_control.v \
 	$(RTL_DIR)/alu.v \
 	$(RTL_DIR)/imm_gen.v \
+	$(RTL_DIR)/data_mem.v \
+	$(RTL_DIR)/wb_mux.v \
 	$(RTL_DIR)/cpu.v
 
 TB_SRCS = \
