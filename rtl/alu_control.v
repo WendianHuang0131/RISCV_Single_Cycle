@@ -49,6 +49,15 @@ always @(*) begin
             endcase
         end
 
+        // get address = offset + base for LOAD/STORE
+        `OPCODE_LOAD: begin
+            alu_ctrl = `ALU_ADD;
+        end
+
+        `OPCODE_STORE: begin
+            alu_ctrl = `ALU_ADD;
+        end
+
         default: begin
             alu_ctrl = `ALU_ADD;
         end
