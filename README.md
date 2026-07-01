@@ -127,3 +127,14 @@ result
 
 run test patterns:
 make run TEST=I_type_basic 
+
+## MILESTORE 3 LOAD/STORE 指令
+
+修改 imm_gen, 計算出 load / store 需要的 address
+
+新增 data_mem
+
+新增 writeback, mux 區分原本的 alu write back 以及 load 需要的 wb_mem
+
+run test patterns:
+make run TEST=load_store
