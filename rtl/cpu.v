@@ -110,6 +110,7 @@ data_mem u_data_mem (
     .clk        (clk),
     .rst        (rst),
     .mem_write  (mem_write),
+    .funct3     (funct3),
     .addr       (alu_result),
     .write_data (rs2_data),
     .read_data  (mem_read_data)
