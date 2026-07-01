@@ -138,3 +138,6 @@ make run TEST=I_type_basic
 
 run test patterns:
 make run TEST=load_store
+
+
+## MILESTORE finish fully load/store
