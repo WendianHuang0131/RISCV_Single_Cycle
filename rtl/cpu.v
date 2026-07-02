@@ -5,21 +5,19 @@ module cpu(
     input wire rst
 );
 
-//TODO: move some control signals to control_unit.v
-// reg_write
-// mem_write
-// alu_src
-// wb_sel
-// is_branch
-// is_jal
-// js_jalr
-// branch_taken
-
-
+// ============================================================
+// IF stage / PC / Instruction
+// ============================================================
 
 wire [`ADDR_WIDTH-1:0] pc_current;
 wire [`ADDR_WIDTH-1:0] pc_next;
+wire [`ADDR_WIDTH-1:0] pc_plus_4;
+
 wire [`INST_WIDTH-1:0] inst;
+
+// ============================================================
+// Decoded instruction fields
+// ============================================================
 
 wire [6:0] opcode;
 wire [6:0] funct7;
@@ -29,33 +27,50 @@ wire [`REG_ADDR_WIDTH-1:0] rs1;
 wire [`REG_ADDR_WIDTH-1:0] rs2;
 wire [`REG_ADDR_WIDTH-1:0] rd;
 
+// ============================================================
+// Register file / Immediate
+// ============================================================
+
 wire [`DATA_WIDTH-1:0] rs1_data;
 wire [`DATA_WIDTH-1:0] rs2_data;
 wire [`DATA_WIDTH-1:0] imm;
 
-wire [`DATA_WIDTH-1:0] alu_operand_b;
-wire [`DATA_WIDTH-1:0] alu_result;
+// ============================================================
+// Control signals
+// ============================================================
+
+wire        reg_write;
+wire        mem_write;
+wire        alu_src;
+wire [1:0]  wb_sel;
+
+wire        is_branch;
+wire        is_jal;
+wire        is_jalr;
+wire        branch_taken;
+
+// ============================================================
+// ALU / Memory / Writeback
+// ============================================================
 
 wire [3:0] alu_ctrl;
 
-wire reg_write;
-wire alu_src;
-wire mem_write;
-wire [1:0] wb_sel;
-wire is_branch;
-wire is_jal;
-wire is_jalr;
-wire branch_taken;
+wire [`DATA_WIDTH-1:0] alu_operand_b;
+wire [`DATA_WIDTH-1:0] alu_result;
 
 wire [`DATA_WIDTH-1:0] mem_read_data;
 wire [`DATA_WIDTH-1:0] wb_data;
-wire [`ADDR_WIDTH-1:0] pc_plus_4;
+
+// ============================================================
+// PC target calculation
+// ============================================================
+
 wire [`ADDR_WIDTH-1:0] branch_target;
 wire [`ADDR_WIDTH-1:0] jal_target;
 wire [`ADDR_WIDTH-1:0] jalr_target;
 
 // ============================================================
-// Control signals
+// Control Unit
 // ============================================================
 
 control_unit u_control_unit (
@@ -71,28 +86,27 @@ control_unit u_control_unit (
     .is_jalr   (is_jalr)
 );
 
-
-
-assign alu_operand_b = alu_src ? imm : rs2_data;
-
 // ============================================================
-// PC next logic
+// Datapath combinational logic
 // ============================================================
 
-assign pc_plus_4     = pc_current + 32'd4;
+assign pc_plus_4 = pc_current + 32'd4;
+
 assign branch_target = pc_current + imm;
 assign jal_target    = pc_current + imm;
 
-// jalr target = (rs1 + imm) & ~1
-assign jalr_target   = (rs1_data + imm) & 32'hffff_fffe;
+// RISC-V JALR target must clear bit 0
+assign jalr_target = (rs1_data + imm) & 32'hffff_fffe;
 
 assign pc_next = is_jal                      ? jal_target    :
                  is_jalr                     ? jalr_target   :
                  (is_branch && branch_taken) ? branch_target :
                                                pc_plus_4;
 
+assign alu_operand_b = alu_src ? imm : rs2_data;
+
 // ============================================================
-// Modules
+// PC
 // ============================================================
 
 pc u_pc (
@@ -102,12 +116,18 @@ pc u_pc (
     .pc      (pc_current)
 );
 
-
+// ============================================================
+// Instruction Memory
+// ============================================================
 
 inst_mem u_inst_mem (
     .addr (pc_current),
     .inst (inst)
 );
+
+// ============================================================
+// Decoder
+// ============================================================
 
 decoder u_decoder (
     .inst   (inst),
@@ -119,11 +139,19 @@ decoder u_decoder (
     .funct7 (funct7)
 );
 
+// ============================================================
+// Immediate Generator
+// ============================================================
+
 imm_gen u_imm_gen (
     .inst   (inst),
     .opcode (opcode),
     .imm    (imm)
 );
+
+// ============================================================
+// Register File
+// ============================================================
 
 regfile u_regfile (
     .clk       (clk),
@@ -137,6 +165,10 @@ regfile u_regfile (
     .rs2_data  (rs2_data)
 );
 
+// ============================================================
+// ALU Control
+// ============================================================
+
 alu_control u_alu_control (
     .opcode   (opcode),
     .funct7   (funct7),
@@ -144,12 +176,31 @@ alu_control u_alu_control (
     .alu_ctrl (alu_ctrl)
 );
 
+// ============================================================
+// ALU
+// ============================================================
+
 alu u_alu (
     .operand_a  (rs1_data),
     .operand_b  (alu_operand_b),
     .alu_ctrl   (alu_ctrl),
     .alu_result (alu_result)
 );
+
+// ============================================================
+// Branch Comparator
+// ============================================================
+
+branch_comp u_branch_comp (
+    .rs1_data     (rs1_data),
+    .rs2_data     (rs2_data),
+    .funct3       (funct3),
+    .branch_taken (branch_taken)
+);
+
+// ============================================================
+// Data Memory
+// ============================================================
 
 data_mem u_data_mem (
     .clk        (clk),
@@ -161,19 +212,16 @@ data_mem u_data_mem (
     .read_data  (mem_read_data)
 );
 
+// ============================================================
+// Writeback Mux
+// ============================================================
+
 wb_mux u_wb_mux (
     .wb_sel        (wb_sel),
     .alu_result    (alu_result),
     .mem_read_data (mem_read_data),
     .pc_plus_4     (pc_plus_4),
     .wb_data       (wb_data)
-);
-
-branch_comp u_branch_comp (
-    .rs1_data      (rs1_data),
-    .rs2_data      (rs2_data),
-    .funct3        (funct3),
-    .branch_taken  (branch_taken)
 );
 
 endmodule
