@@ -50,6 +50,17 @@ assign wb_sel = (opcode == `OPCODE_LOAD) ? `WB_MEM : `WB_ALU;
 
 assign alu_operand_b = alu_src ? imm : rs2_data;
 
+wire branch;
+wire branch_taken;
+wire [`ADDR_WIDTH-1:0] pc_plus4;
+wire [`ADDR_WIDTH-1:0] branch_target;
+
+assign branch = (opcode == `OPCODE_BRANCH);
+
+assign pc_plus4       = pc_current + 32'd4;
+assign branch_target  = pc_current + imm;
+
+assign pc_next = (branch && branch_taken) ? branch_target : pc_plus4;
 
 
 pc u_pc (
@@ -121,6 +132,13 @@ wb_mux u_wb_mux (
     .alu_result    (alu_result),
     .mem_read_data (mem_read_data),
     .wb_data       (wb_data)
+);
+
+branch_comp u_branch_comp (
+    .rs1_data      (rs1_data),
+    .rs2_data      (rs2_data),
+    .funct3        (funct3),
+    .branch_taken  (branch_taken)
 );
 
 endmodule
