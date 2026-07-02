@@ -38,21 +38,13 @@ wire [`DATA_WIDTH-1:0] alu_result;
 
 wire [3:0] alu_ctrl;
 
-//TODO, move this control signal into control_unit
 wire reg_write;
-//TODO, move this control signal into control_unit
 wire alu_src;
-//TODO, move this control signal into control_unit
 wire mem_write;
-//TODO, move this control signal into control_unit
 wire [1:0] wb_sel;
-//TODO, move this control signal into control_unit
 wire is_branch;
-//TODO, move this control signal into control_unit
 wire is_jal;
-//TODO, move this control signal into control_unit
 wire is_jalr;
-//TODO, move this control signal into control_unit
 wire branch_taken;
 
 wire [`DATA_WIDTH-1:0] mem_read_data;
