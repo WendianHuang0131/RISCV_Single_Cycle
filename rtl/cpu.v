@@ -63,35 +63,23 @@ wire [`ADDR_WIDTH-1:0] jal_target;
 wire [`ADDR_WIDTH-1:0] jalr_target;
 
 // ============================================================
-// Instruction type detect
-// ============================================================
-
-assign is_branch = (opcode == `OPCODE_BRANCH);
-assign is_jal    = (opcode == `OPCODE_JAL);
-assign is_jalr   = (opcode == `OPCODE_JALR);
-
-// ============================================================
 // Control signals
 // ============================================================
 
-assign reg_write = (opcode == `OPCODE_R)    ||
-                   (opcode == `OPCODE_I)    ||
-                   (opcode == `OPCODE_LOAD) ||
-                   (opcode == `OPCODE_JAL)  ||
-                   (opcode == `OPCODE_JALR);
+control_unit u_control_unit (
+    .opcode    (opcode),
 
-assign alu_src = (opcode == `OPCODE_I)     ||
-                 (opcode == `OPCODE_LOAD)  ||
-                 (opcode == `OPCODE_STORE) ||
-                 (opcode == `OPCODE_JALR);
+    .reg_write (reg_write),
+    .mem_write (mem_write),
+    .alu_src   (alu_src),
+    .wb_sel    (wb_sel),
+
+    .is_branch (is_branch),
+    .is_jal    (is_jal),
+    .is_jalr   (is_jalr)
+);
 
 
-assign mem_write = (opcode == `OPCODE_STORE);
-
-
-assign wb_sel = (opcode == `OPCODE_LOAD) ? `WB_MEM :
-                (opcode == `OPCODE_JAL || opcode == `OPCODE_JALR) ? `WB_PC4 :
-                `WB_ALU;
 
 assign alu_operand_b = alu_src ? imm : rs2_data;
 
@@ -121,6 +109,8 @@ pc u_pc (
     .pc_next (pc_next),
     .pc      (pc_current)
 );
+
+
 
 inst_mem u_inst_mem (
     .addr (pc_current),
