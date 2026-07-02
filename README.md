@@ -143,3 +143,17 @@ make run TEST=load_store
 ## MILESTORE finish fully load/store
 
 ## MILESTORE finish btype datapath
+
+## MILESTORE finish j-type instruction
+
+1. 實作 j-type 的 immediate value
+imm[20]    = inst[31]
+imm[10:1]  = inst[30:21]
+imm[11]    = inst[20]
+imm[19:12] = inst[19:12]
+imm[0]     = 0
+2. 擴展 wb_mux.v ，原本 1 bit 不夠 三個
+
+
+TODO:
+把 所有控制訊號寫在 cpu 中，感覺有點亂，可能額外拆出 control_unit

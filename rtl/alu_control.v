@@ -58,6 +58,10 @@ always @(*) begin
             alu_ctrl = `ALU_ADD;
         end
 
+        `OPCODE_JALR: begin
+            alu_ctrl = `ALU_ADD;
+        end
+
         default: begin
             alu_ctrl = `ALU_ADD;
         end
