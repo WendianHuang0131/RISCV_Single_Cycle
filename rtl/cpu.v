@@ -5,6 +5,18 @@ module cpu(
     input wire rst
 );
 
+//TODO: move some control signals to control_unit.v
+// reg_write
+// mem_write
+// alu_src
+// wb_sel
+// is_branch
+// is_jal
+// js_jalr
+// branch_taken
+
+
+
 wire [`ADDR_WIDTH-1:0] pc_current;
 wire [`ADDR_WIDTH-1:0] pc_next;
 wire [`INST_WIDTH-1:0] inst;
@@ -26,20 +38,25 @@ wire [`DATA_WIDTH-1:0] alu_result;
 
 wire [3:0] alu_ctrl;
 
+//TODO, move this control signal into control_unit
 wire reg_write;
+//TODO, move this control signal into control_unit
 wire alu_src;
-
+//TODO, move this control signal into control_unit
 wire mem_write;
+//TODO, move this control signal into control_unit
 wire [1:0] wb_sel;
-wire [`DATA_WIDTH-1:0] mem_read_data;
-wire [`DATA_WIDTH-1:0] wb_data;
-
+//TODO, move this control signal into control_unit
 wire is_branch;
+//TODO, move this control signal into control_unit
 wire is_jal;
+//TODO, move this control signal into control_unit
 wire is_jalr;
-
+//TODO, move this control signal into control_unit
 wire branch_taken;
 
+wire [`DATA_WIDTH-1:0] mem_read_data;
+wire [`DATA_WIDTH-1:0] wb_data;
 wire [`ADDR_WIDTH-1:0] pc_plus_4;
 wire [`ADDR_WIDTH-1:0] branch_target;
 wire [`ADDR_WIDTH-1:0] jal_target;
@@ -63,12 +80,14 @@ assign reg_write = (opcode == `OPCODE_R)    ||
                    (opcode == `OPCODE_JAL)  ||
                    (opcode == `OPCODE_JALR);
 
-assign mem_write = (opcode == `OPCODE_STORE);
-
 assign alu_src = (opcode == `OPCODE_I)     ||
                  (opcode == `OPCODE_LOAD)  ||
                  (opcode == `OPCODE_STORE) ||
                  (opcode == `OPCODE_JALR);
+
+
+assign mem_write = (opcode == `OPCODE_STORE);
+
 
 assign wb_sel = (opcode == `OPCODE_LOAD) ? `WB_MEM :
                 (opcode == `OPCODE_JAL || opcode == `OPCODE_JALR) ? `WB_PC4 :
