@@ -28,6 +28,15 @@ always @(*) begin
             imm = {{19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
         end
 
+        `OPCODE_JAL: begin
+            imm = {{11{inst[31]}}, inst[31], inst[19:12],
+                inst[20], inst[30:21], 1'b0};
+        end
+
+        `OPCODE_JALR: begin
+            imm = {{20{inst[31]}}, inst[31:20]};
+        end
+
         default: begin
             imm = {`DATA_WIDTH{1'b0}};
         end
