@@ -141,3 +141,5 @@ make run TEST=load_store
 
 
 ## MILESTORE finish fully load/store
+
+## MILESTORE finish btype datapath
