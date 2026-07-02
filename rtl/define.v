@@ -30,7 +30,8 @@
 `define ALU_SRL   4'b1000
 `define ALU_SRA   4'b1001
 
-`define WB_ALU 1'b0
-`define WB_MEM 1'b1
+`define WB_ALU 1'b00
+`define WB_MEM 1'b01
+`define WB_PC4 2'b10
 
 `endif

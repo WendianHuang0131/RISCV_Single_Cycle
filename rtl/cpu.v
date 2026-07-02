@@ -131,6 +131,7 @@ wb_mux u_wb_mux (
     .wb_sel        (wb_sel),
     .alu_result    (alu_result),
     .mem_read_data (mem_read_data),
+    .pc_plus_4     (pc_plus_4),
     .wb_data       (wb_data)
 );
 
