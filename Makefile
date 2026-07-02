@@ -62,6 +62,7 @@ RTL_SRCS = \
 	$(RTL_DIR)/data_mem.v \
 	$(RTL_DIR)/wb_mux.v \
 	$(RTL_DIR)/branch_comp.v \
+	$(RTL_DIR)/control_unit.v \
 	$(RTL_DIR)/cpu.v
 
 TB_SRCS = \
