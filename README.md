@@ -1,159 +1,479 @@
-此專案目標為學習 RISC-V 32 的硬體實作，預期順序：
-1. R-Type
-2. I-Type
-3. Load/Store
-4. Branch
-5. Jump
+# RV32I CPU Implementation
 
+這個專案使用 Verilog/SystemVerilog 實作一個 **RISC-V 32-bit CPU（RV32I subset）**。
 
-## 1. 支援 R-Type
-預期實作 module
-cpu.v
-pc.v
-inst_mem.v
-regfile.v
-decoder.v
-alu.v
-control_unit.v
+開發方式採用循序漸進的 datapath 擴充流程，先完成 single-cycle CPU，再逐步加入 5-stage pipeline、data hazard handling、forwarding、load-use stall 與 control hazard flush。
 
-### MILESTORE 1
+---
 
-Finshed CPU and testbench
+## Project Goals
 
-support R-Type add & sub instruction
+本專案的主要目標：
 
-Test case:
+1. 熟悉 RV32I instruction encoding 與 datapath
+2. 從零建立 single-cycle CPU
+3. 按 instruction type 逐步擴充功能
+4. 建立 assembly test flow 與 register golden checking
+5. 將 single-cycle CPU 改造成 5-stage pipeline CPU
+6. 實作 hazard detection、stall、forwarding 與 flush
 
-```
-//Preload register value:
-//x1 : 32'd10
-//x2 : 32'd25
+---
 
-//Test program
-add x3, x1, x2
-sub x4, x2, x1
+## Note
 
-```
+[HACKMD: Single-cycle RISC-V 32 Implementation](https://hackmd.io/@qMrp9BNDQ0Gf2uuTTGde-A/SyRdXZy4Gx)
 
-- Got correct result
-```
-x1 = 10
-x2 = 25
-x3 = 35
-x4 = 15
-```
+---
 
-## MILESTORE 2
+## Supported Instruction Types
 
-Finished R-Type instrunction, inclusing:
+目前 single-cycle baseline 依照以下順序完成：
 
-```
-add
-sub
-and
-or
-xor
-slt
-sltu
-sll
-srl
-sra
-```
+1. R-type
+2. I-type ALU
+3. Load / Store
+4. B-type
+5. J-type / JALR
 
-run test patterns:
-make run TEST=R_type_basic
+目前支援的 instruction：
 
-## 2. 支援 I-type 指令
+| Type | Instructions |
+|---|---|
+| R-type | `ADD`, `SUB`, `SLL`, `SLT`, `SLTU`, `XOR`, `SRL`, `SRA`, `OR`, `AND` |
+| I-type ALU | `ADDI`, `SLTI`, `SLTIU`, `XORI`, `ORI`, `ANDI`, `SLLI`, `SRLI`, `SRAI` |
+| Load | `LB`, `LH`, `LW`, `LBU`, `LHU` |
+| Store | `SB`, `SH`, `SW` |
+| B-type | `BEQ`, `BNE`, `BLT`, `BGE`, `BLTU`, `BGEU` |
+| Jump | `JAL`, `JALR` |
 
-要把 I type 指令 dataflow 加上去，
-實作了 imm_gen, 以及 alu operand_b mux 來決定 operand_b 是 rs2_data 還是 imm
+> 目前實作的是 RV32I subset，尚未包含 `LUI`、`AUIPC`、CSR、`FENCE`、`ECALL`、`EBREAK` 等 instruction。
 
-測試程式
-```
-    addi x1,  x0, 10      # x1 = 10
-    addi x2,  x0, 3       # x2 = 3
+---
 
-    addi x3,  x1, 5       # x3 = 15
-    andi x4,  x1, 3       # x4 = 10 & 3 = 2
-    ori  x5,  x1, 3       # x5 = 10 | 3 = 11
-    xori x6,  x1, 3       # x6 = 10 ^ 3 = 9
+# Development Milestones
 
-    slti  x7, x2, 10      # x7 = 1
-    sltiu x8, x2, 10      # x8 = 1
+## Milestone 1 — R-type Datapath
 
-    slli x9,  x1, 3       # x9  = 80
-    srli x10, x1, 3       # x10 = 1
+完成 register-to-register ALU datapath。
 
-    addi x11, x0, -8      # x11 = 0xfffffff8
-    srai x12, x11, 1      # x12 = 0xfffffffc
+### Features
+
+- Instruction decode
+- Register file with 2 read ports and 1 write port
+- ALU control
+- ALU operation
+- Register write-back
+- Assembly test flow
+- Register preload and expected-result checking
+
+### Supported Instructions
+
+```text
+ADD
+SUB
+SLL
+SLT
+SLTU
+XOR
+SRL
+SRA
+OR
+AND
 ```
 
-result
+### Main Commits
 
-```
-[ OK  ] x0 = 0x00000000
-[ OK  ] x1 = 0x0000000a
-[ OK  ] x2 = 0x00000003
-[ OK  ] x3 = 0x0000000f
-[ OK  ] x4 = 0x00000002
-[ OK  ] x5 = 0x0000000b
-[ OK  ] x6 = 0x00000009
-[ OK  ] x7 = 0x00000001
-[ OK  ] x8 = 0x00000001
-[ OK  ] x9 = 0x00000050
-[ OK  ] x10 = 0x00000001
-[ OK  ] x11 = 0xfffffff8
-[ OK  ] x12 = 0xfffffffc
-[ OK  ] x13 = 0x00000000
-[ OK  ] x14 = 0x00000000
-[ OK  ] x15 = 0x00000000
-[ OK  ] x16 = 0x00000000
-[ OK  ] x17 = 0x00000000
-[ OK  ] x18 = 0x00000000
-[ OK  ] x19 = 0x00000000
-[ OK  ] x20 = 0x00000000
-[ OK  ] x21 = 0x00000000
-[ OK  ] x22 = 0x00000000
-[ OK  ] x23 = 0x00000000
-[ OK  ] x24 = 0x00000000
-[ OK  ] x25 = 0x00000000
-[ OK  ] x26 = 0x00000000
-[ OK  ] x27 = 0x00000000
-[ OK  ] x28 = 0x00000000
-[ OK  ] x29 = 0x00000000
-[ OK  ] x30 = 0x00000000
-[ OK  ] x31 = 0x00000000
+```text
+35a9990f  [MILESTORE] Finished R-Type add, sub instruction
+ef795da9  [MILESTORE] Finished R-type instructions, tb, test flow
 ```
 
-run test patterns:
-make run TEST=I_type_basic 
+### Test Cases
 
-## MILESTORE 3 LOAD/STORE 指令
+```text
+alu_basic
+r_type
+```
 
-修改 imm_gen, 計算出 load / store 需要的 address
+Recommended coverage:
 
-新增 data_mem
+```assembly
+add  x3,  x1, x2
+sub  x4,  x1, x2
+and  x6,  x1, x2
+or   x7,  x1, x2
+xor  x8,  x1, x2
+slt  x9,  x2, x1
+sltu x10, x2, x1
+sll  x11, x1, x2
+srl  x12, x1, x2
+sra  x13, x5, x2
+```
 
-新增 writeback, mux 區分原本的 alu write back 以及 load 需要的 wb_mem
+---
 
-run test patterns:
-make run TEST=load_store
+## Milestone 2 — I-type ALU Datapath
 
+加入 immediate generator 與 ALU operand B mux，使 ALU 可以選擇 register data 或 immediate。
 
-## MILESTORE finish fully load/store
+### Features
 
-## MILESTORE finish btype datapath
+- I-type immediate generation
+- 12-bit immediate sign extension
+- ALU operand B selection
+- Shift-immediate decoding
+- I-type ALU write-back
 
-## MILESTORE finish j-type instruction
+### Supported Instructions
 
-1. 實作 j-type 的 immediate value
-imm[20]    = inst[31]
-imm[10:1]  = inst[30:21]
-imm[11]    = inst[20]
-imm[19:12] = inst[19:12]
-imm[0]     = 0
-2. 擴展 wb_mux.v ，原本 1 bit 不夠 三個
+```text
+ADDI
+SLTI
+SLTIU
+XORI
+ORI
+ANDI
+SLLI
+SRLI
+SRAI
+```
 
+### Main Commit
 
-TODO:
-把 所有控制訊號寫在 cpu 中，感覺有點亂，可能額外拆出 control_unit
+```text
+5d6b442f  [MILESTORE] Finished I-type instructions
+```
+
+### Test Cases
+
+```text
+i_type
+i_type_basic
+```
+
+---
+
+## Milestone 3 — Load / Store Datapath
+
+加入 Data Memory、effective address calculation 與 memory write-back path。
+
+### Features
+
+- Effective address calculation: `address = rs1 + immediate`
+- Byte-addressable Data Memory
+- Little-endian memory layout
+- Signed and unsigned load
+- Byte, halfword and word store
+- Write-back mux supports ALU and memory result
+
+### Supported Instructions
+
+```text
+LB
+LH
+LW
+LBU
+LHU
+SB
+SH
+SW
+```
+
+### Main Commits
+
+```text
+eb6d0a71  [MILESTORE] Finished load/store datapath
+b824a054  [MILESTORE] finished fully load/store instruction
+```
+
+### Test Cases
+
+```text
+load_store
+load
+store
+lb_lbu
+lh_lhu
+```
+
+---
+
+## Milestone 4 — B-type Datapath
+
+加入 branch comparator、B-type immediate encoding 與 conditional next-PC selection。
+
+### Features
+
+- Branch immediate generation
+- Branch target calculation: `branch_target = PC + immediate`
+- Signed comparison
+- Unsigned comparison
+- Conditional PC selection
+
+### Supported Instructions
+
+```text
+BEQ
+BNE
+BLT
+BGE
+BLTU
+BGEU
+```
+
+### Main Commit
+
+```text
+4c1933bc  [MILESTONE] Implemented B-type datapath
+```
+
+### Test Case
+
+```text
+branch
+```
+
+---
+
+## Milestone 5 — J-type / Jump Datapath
+
+加入 JAL、JALR target calculation 與 `PC+4` write-back path。
+
+### Features
+
+- J-type immediate generation
+- JAL target calculation: `jal_target = PC + immediate`
+- JALR target calculation: `jalr_target = (rs1 + immediate) & ~1`
+- Write-back mux supports `PC+4`
+- Function call and return style control flow
+
+### Supported Instructions
+
+```text
+JAL
+JALR
+```
+
+### Main Commit
+
+```text
+e20f3428  [MILESTONE] Implement j-type datapath
+```
+
+### Test Cases
+
+```text
+jal
+jalr
+```
+
+---
+
+# Single-Cycle CPU Architecture
+
+Single-cycle CPU 在一個 clock cycle 內完成一條 instruction：
+
+```text
+PC
+→ Instruction Memory
+→ Decoder
+→ Register File
+→ Immediate Generator
+→ ALU / Branch Comparator
+→ Data Memory
+→ Write-back Mux
+→ Register File
+```
+
+## Characteristics
+
+### Advantages
+
+- Datapath concept is straightforward
+- CPI is always 1
+- No pipeline data hazard
+- No forwarding or stall logic required
+- Easy to verify instruction functionality
+
+### Limitations
+
+- Long critical path
+- Clock period is limited by the slowest instruction
+- Load instruction usually determines the minimum clock period
+- Hardware resources cannot be overlapped across instructions
+
+---
+
+# Project Structure
+
+```text
+.
+├── rtl/
+│   ├── cpu.v
+│   ├── pc.v
+│   ├── inst_mem.v
+│   ├── data_mem.v
+│   ├── regfile.v
+│   ├── decoder.v
+│   ├── imm_gen.v
+│   ├── control_unit.v
+│   ├── alu_control.v
+│   ├── alu.v
+│   ├── branch_comp.v
+│   ├── wb_mux.v
+│   ├── forwarding_unit.v
+│   ├── hazard_unit.v
+│   ├── if_id_reg.v
+│   ├── id_ex_reg.v
+│   ├── ex_mem_reg.v
+│   └── mem_wb_reg.v
+├── tests/
+│   ├── preload_data/
+│   ├── expected_result/
+│   └── *.S
+├── build/
+├── program/
+├── tb_top.sv
+├── Makefile
+└── README.md
+```
+
+> 請依實際 repository 目錄調整上述 tree。
+
+---
+
+# Test Flow
+
+```text
+tests/*.S
+   ↓
+RISC-V GCC
+   ↓
+ELF
+   ↓
+objcopy
+   ↓
+BIN
+   ↓
+HEX
+   ↓
+Instruction Memory preload
+   ↓
+RTL simulation
+   ↓
+Register result comparison
+```
+
+The testbench supports:
+
+- Register preload
+- Expected register result checking
+- Test selection through command-line arguments
+- VCD waveform dump
+- Regression test flow
+
+---
+
+# Build and Run
+
+Run the default testcase:
+
+```bash
+make test
+```
+
+Run a specific testcase:
+
+```bash
+make test TEST=alu_basic
+```
+
+Run with a custom simulation cycle count:
+
+```bash
+make test TEST=branch SIM_CYCLES=100
+```
+
+Open waveform:
+
+```bash
+make wave TEST=branch
+```
+
+Clean generated files:
+
+```bash
+make clean
+```
+
+> Target names may be adjusted according to the actual Makefile.
+
+---
+
+# Verification Checklist
+
+Each testcase should verify:
+
+- Correct source register values
+- Correct immediate encoding
+- Correct ALU operation
+- Correct destination register
+- Correct memory address
+- Correct load sign/zero extension
+- Correct store byte enable behavior
+- Correct branch taken/not-taken result
+- Correct JAL/JALR target
+- Correct `PC+4` link address
+- Correct forwarding source
+- Correct load-use stall
+- Wrong-path instructions produce no architectural side effects
+
+---
+
+# Tools
+
+```text
+Verilator
+GTKWave
+RISC-V GNU Toolchain
+GNU Make
+macOS / Linux
+```
+
+---
+
+# Current Status
+
+The project currently contains:
+
+- RV32I single-cycle CPU baseline
+- R-type, I-type, Load/Store, B-type, JAL and JALR support
+- Assembly-based test flow
+- Register preload and golden-result checking
+- 5-stage pipeline datapath
+- RAW hazard detection
+- EX/MEM and MEM/WB forwarding
+- Load-use interlock
+- Branch/JAL/JALR redirect and pipeline flush
+
+---
+
+# Future Work
+
+- `LUI` and `AUIPC`
+- CSR instructions
+- Exception and interrupt handling
+- `ECALL` and `EBREAK`
+- Branch prediction
+- Pipeline valid bits
+- Memory ready/valid protocol
+- Cache integration
+- Formal verification
+- Functional coverage
+- Performance counters
+
+---
+
+# Notes
+
+This project is intended for learning CPU microarchitecture, RISC-V instruction execution, pipelining and hazard handling. It is not a complete production-grade RISC-V core.
